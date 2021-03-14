@@ -1,0 +1,73 @@
+;help
+    : ヘルプを表示
+
+;tex <code>
+    : texを表示
+;mtex <code>
+    : 数式モードでtexを表示
+;jtex <code>
+    : 日本語モードでtexを表示
+    
+;profile <name>
+    : <name>のプロフィールを表示
+;profset <nickname> <profile>
+    : 自身のプロフィールを設定
+    
+;sch set <name> (<time>)
+    : <name>というスケジュールを追加
+;sch modify <number> [name|time] <change>
+    : <number>番目のスケジュールの内容(name or time)を変更
+;sch delete <number>
+    : <number>番目のスケジュールを削除
+;sch join <number>
+    : <number>番目のスケジュールに参加
+;sch quit <number>
+    : <number>番目のスケジュールを離脱
+    
+;ttt make (<dimention> <size>)
+    : <dimention>次元<size>目並べを開始
+;ttt del
+    : 既存のゲームの削除
+;ttt put <coordinates>
+    : <coordinates>の位置にコマを配置
+;ttt now
+    : 現在の盤面を確認
+    
+;tr <srcLang> <targetLang> <content>
+    : <srcLang>語から<targetLang>語へ<content>を翻訳
+;wiki <lang> <content>
+    : <lang>語でwikiを検索
+;search <word>
+    : <word>をGoogle検索
+;smiles <SMILES>
+    : <SMILES>を画像に変換
+;wolf <formula>
+    : <formula>の Wolfram Alpha による解析結果を表示
+;lyr <song>
+    : <song>の歌詞を表示
+    
+    
+
+※;help ;tr ;wiki ;tex ;mtex ;smiles はDM対応
+※国旗リアクションでの翻訳は英語、日本語、ドイツ語、フランス語、ロシア語、中国語、ギリシャ語対応
+※メッセージに:caution:が5つ付くとOffenderロールが付与されます
+
+--------------------------------------------------------------------------------------
+
+[Rythm]
+※ #music-commands でのみ利用可能
+
+ボイスチャットに接続 !join
+再生 !p (曲名)
+スキップ !s
+ボイチャから切断 !dc
+コマンドリスト !help
+
+[Rythm2]
+※ #music-commands でのみ利用可能
+
+ボイスチャットに接続 >join
+再生 >p (曲名)
+スキップ >s
+ボイチャから切断 >dc
+コマンドリスト >help

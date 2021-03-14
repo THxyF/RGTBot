@@ -1,0 +1,23 @@
+<Rule>
+
+(How to use the channel)
+
+- Please talk on the appropriate channel. The channel topic describes how to use the channel.
+
+(About server solicitation)
+
+- You may link to this server to individuals or closed communities.
+
+(About Bot)
+
+- You can check the functions of various bots with ;help.
+
+(About Kick)
+
+- Abuse, insult, excessive humility, harassment, and other acts that may make someone uncomfortable, subjective remarks, comparison of abilities with a large subject, entrainment pressure, and insults to academic field are prohibited.
+
+- Please use reaction <:caution:703545763522674688> to let us know about the above actions.
+
+- If 5 or more <:caution:703545763522674688>s are reacted, it will be defined as a kick target act and will be added to <@&734339795123306517>. 
+
+- If you are added to <@&734339795123306517>, channels other than <#695274768974348324> and <#703543536381067315> will not be viewable. If you declare to remove the message in <#695274768974348324>, <@&755279225702842468> removes <@&734339795123306517> role instead of adding you to <@&734340291024388096>. If you perform a Kick target act while you are <@&734340291024388096>, you will be kicked.
