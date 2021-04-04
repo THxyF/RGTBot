@@ -43,7 +43,7 @@ exports.reacts = async (msg, reactions) => {
 };
 
 exports.reacts2 = async (msg, reactions) => {
-  await Promise.all(reactions.map(r => msg.react(r)));
+  Promise.all(reactions.map(r => msg.react(r)));
 
   return msg;
 };
@@ -191,72 +191,73 @@ exports.mulSelectArrByRTs = async (inputMsg, arr, min, max) => {
   let page = 0;
   let selected = [];
   let entered = false;
-  let collector;
-  let filter1 = (reaction, user) =>
-    consts.numRTs.includes(reaction.emoji.name) && user.id === inputMsg.author.id;
-  let filter2 = (reaction, user) =>
-    consts.arrowRTs.includes(reaction.emoji.name) && user.id === inputMsg.author.id;
+  let filter = (reaction, user) =>
+    consts.arrowRTs.includes(reaction.emoji.name) &&
+    user.id === inputMsg.author.id;
   let rts = this.mulGenRTs(newArr, page, selected);
   let out = this.mulGenMsg(newArr, page, selected);
-  let p = inputMsg.channel.send(out).then(m => {
-    collector = m.createReactionCollector(filter1, { time: 60000 });
-    return this.reacts2(m, rts);
-  });
+  let p = inputMsg.channel.send(out).then(m => this.reacts2(m, rts));
 
   while (!entered) {
     p = Promise.resolve(
       await p
-        .then(m => m.awaitReactions(filter2, { max: 1, time: 60000 }))
+        .then(m => m.awaitReactions(filter, { max: 1, time: 60000 }))
         .then(async r => {
-          console.log(selected);
-          console.log(collector.collected);
-          if (collector.total > 0) {
-            collector.collected
-              .map(
-                el =>
-                  consts.numRTs.findIndex(e => e === el.emoji.name) +
-                  page * consts.numRTs.length
-              )
-              .forEach(async el => {
-                let i = selected.findIndex(e => e === el);
-                console.log(`[${i}]:${el}`);
-                if (i !== -1) selected.splice(i, 1);
-                else if (selected.length < max) selected.push(el);
-                else await r.first().users.remove(inputMsg.author.id);
-              });
+          if(r.first() === undefined){
+            inputMsg.channel.send("timed out");
+            entered = true;
+            selected = [];
+            return inputMsg;
           }
+          r.first()
+            .message.reactions.cache.filter(re => 
+                rts.includes(re.emoji.name) &&
+                consts.numRTs.includes(re.emoji.name) &&
+                re.users.cache.has(inputMsg.author.id)
+            )?.map(
+              el =>
+                consts.numRTs.findIndex(e => e === el.emoji.name) +
+                page * consts.numRTs.length
+            )?.forEach(async el => {
+              let i = selected.findIndex(e => e === el);
+
+              if (i !== -1) selected.splice(i, 1);
+              else selected.push(el);
+            });
           
+          console.log(selected);
 
           switch (consts.arrowRTs.findIndex(e => e === r.first().emoji.name)) {
             case 0:
-              --page;
-              break;
+              page -= 2;
             case 1:
               ++page;
+              rts = this.mulGenRTs(newArr, page, selected);
+              out = this.mulGenMsg(newArr, page, selected);
+
               break;
             case 2:
-              if (selected.length >= min){ entered = true;return 0;}
-              else await r.first().users.remove(inputMsg.author.id);
+              if (selected.length <= max && selected.length >= min) {
+                entered = true;
+              } else {
+                await r.first().users.remove(inputMsg.author.id);
+              }
+              return r.first().message;
 
-              
               break;
           }
-
-          rts = this.mulGenRTs(newArr, page, selected);
-          out = this.mulGenMsg(newArr, page, selected);
-
-          return r.first().message.edit(out);
-        })
-        .then(async m => {
-          if (m === 0) return 0;
-          collector.stop();
-          collector = m.createReactionCollector(filter1, { time: 60000 });
-          await m.reactions.removeAll();
-          return this.reacts2(m, rts);
+          return r
+            .first()
+            .message.edit(out)
+            .then(async m => {
+              await m.reactions.removeAll();
+              return this.reacts2(m, rts);
+            });
         })
     );
   }
-};
+  return selected;
+}
 
 exports.mulGenRTs = (newArr, page) => {
   let rts = [];
@@ -293,3 +294,7 @@ exports.mulGenMsg = (newArr, page, selected) => {
 
   return out;
 };
+
+exports.deleteArr = (arr, targets = []) => {
+  return arr.filter((e, i) => !targets.includes(i));
+}

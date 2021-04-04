@@ -104,7 +104,7 @@ async function useType3(dat, msg, operationId) {
       msg.channel.send(`calulate!!:${out}\n`);
 
       dat.game.field[field][targets.shift()] = `<@!${msg.author.id}> is calculating \"${out}\"`;
-      dat.game.field[field] = deleteArr(dat.game.field[field], targets);
+      dat.game.field[field] = util.deleteArr(dat.game.field[field], targets);
 
       await util.sleep(100);
     })
