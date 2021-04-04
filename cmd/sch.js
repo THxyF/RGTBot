@@ -3,6 +3,7 @@ const times=require("../func/time.js");
 const discord = require("discord.js");
 const fs = require("fs");
 const fetch = require("node-fetch");
+const post = require("../func/post.js");
 
 const client = new discord.Client({
   partials: ["MESSAGE", "CHANNEL", "REACTION"]
@@ -235,7 +236,7 @@ exports.cMain = async function cMain(arg, msg) {
         );
         if (index != -1) {
           scheduleDat.schedule[arg[1]].participants.splice(index, 1);
-          let organizer = consts.client.users.cache.find(
+          let organizer = client.users.cache.find(
             user => user.id === scheduleDat.schedule[arg[1]].organizer.id
           );
           if (organizer != undefined) {

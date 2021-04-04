@@ -1,4 +1,6 @@
 const fetch = require("node-fetch");
+const post = require("../func/post.js");
+
 exports.cMain = async function cMain(arg, msg) {
   const source = encodeURIComponent(arg.shift());
   const target = encodeURIComponent(arg.shift());
@@ -15,6 +17,6 @@ exports.cMain = async function cMain(arg, msg) {
     msg.channel.send("Error. There is Program Errors.");
     return 0;
   }
-  msg.channel.send(content);
+  post.post(content, msg.channel, msg.id);
   return 0;
 };

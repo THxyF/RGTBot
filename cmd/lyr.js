@@ -1,4 +1,6 @@
 const fetch = require("node-fetch");
+const post = require("../func/post.js");
+
 exports.cMain = async function cMain(arg, msg) {
   let content = await fetch(
     `https://petitlyrics.com/search_lyrics?title=${encodeURIComponent(
@@ -60,5 +62,5 @@ exports.cMain = async function cMain(arg, msg) {
   console.log(lyric);
   console.log(url[0]);
   console.log(title[0]);
-  msg.channel.send(lyric);
+  post.post(lyric, msg.channel);
 };

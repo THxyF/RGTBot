@@ -14,7 +14,7 @@ exports.cMain = async function cMain(arg, msg) {
     await targetCh.messages.fetch(arg[1]).then(message => {targetMsg = message});
     if (targetMsg === undefined) throw "couldn't find the Msg by ID:" + arg[1];
 
-    post.edit(`./text/${arg[2]}.txt`, targetMsg);
+    post.edit(fs.readFileSync(`./text/${arg[2]}.txt`, "utf8"), targetMsg);
   } catch (err) {
     throw err;
   }

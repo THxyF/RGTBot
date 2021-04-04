@@ -4,7 +4,7 @@ exports.scheduleTimePath = "/json/scheduleTime.json";
 exports.funcReadPath = "/func/file.js";
 
 exports.reminderTime = 10;
-exports.maxCautionCount = 1;
+exports.maxCautionCount = 3;
 exports.memberRoleThreshold = 10;
 
 exports.guildId = "695274768974348320";
@@ -17,6 +17,9 @@ exports.rolingMsgId = "806458202807730176";
 exports.rolingMsgId2 = "806461313949499402";
 exports.rolingMsgId3 = "806819304447541248";
 exports.memberRoleId = "805783022749614081";
+exports.adminRoleId = "755279225702842468";
+exports.offebderRoleId = "734339795123306517";
+exports.exConvictRoleId = "734340291024388096";
 
 exports.wolfAppId = "WXAG3R-47GQP7J29U";
 
@@ -41,6 +44,9 @@ exports.mention = {
 };
 
 exports.deleteBanedChList = [this.rulesChId, this.vcAnnId];
+
+exports.numRTs = ["0️⃣","1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣"];
+exports.arrowRTs = ["◀️","▶️","🆗"]
 
 exports.flagAndLang = [
   ["🇯🇵", "ja"],

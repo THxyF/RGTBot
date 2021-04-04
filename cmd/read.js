@@ -1,4 +1,5 @@
 const fetch = require("node-fetch");
+const post = require("../func/post.js");
 const util = require("../func/util.js");
 
 const voiceKey = "566a1316024a4563bb6cdf4907a39cf9";
@@ -12,15 +13,15 @@ exports.cMain = async function cMain(arg, msg) {
 
   let content = "";
 
-  await fetch(req1)
+  /*await fetch(req1)
     .then(res => res.text())
     .then(res =>
       res
         .match(/<reading>.*?<\/reading>/g)
         .forEach(el => (content += el.slice(9, el.length - 10)))
     );
-
-  await util.sleep(500);
+  */
+  //await util.sleep(500);
 
   let req2 = `http://api.voicerss.org/?key=${voiceKey}&hl=ja-jp&c=MP3&src=${encodeURIComponent(
     content

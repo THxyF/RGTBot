@@ -1,1 +1,0 @@
-exports.cMain = async function cMain(arg, msg) {}
