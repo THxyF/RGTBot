@@ -1,7 +1,6 @@
 # DiscordBotBase
 
-GlitchでDiscordBotを作るためのベースです。
-
+Glitch で DiscordBot を作るためのベースです。
 
 ## 詳細
 

@@ -1,5 +1,7 @@
 const consts=require("../func/const.js");
 const fetch = require("node-fetch");
+const post = require("../func/post.js");
+
 exports.cMain = async function cMain(arg, msg) {
   let tex = encodeURIComponent(arg.shift());
   while (arg.length !== 0) {
@@ -34,7 +36,7 @@ exports.cMain = async function cMain(arg, msg) {
     let a = arr.filter(ar => {
       return new RegExp(t).test(ar.name);
     });
-    msg.channel.send(t, { files: a });
+    post.post(t, msg.channel, msg.id, { files: a });
   });
   return 0;
 };

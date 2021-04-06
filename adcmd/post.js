@@ -10,7 +10,7 @@ exports.cMain = async function cMain(arg, msg) {
     if (targetCh === undefined) throw "couldn't find the Ch by ID:" + arg[0];
 
     for(let i = 1; i < arg.length; ++ i){
-      post.post(`./text/${arg[i]}.txt`, targetCh);
+      post.post(fs.readFileSync(`./text/${arg[i]}.txt`, "utf8"), targetCh);
     }
   } catch (err) {
     throw err;

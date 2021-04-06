@@ -1,4 +1,10 @@
-const consts = require("."+"/func/const.js");//定数表
+const consts = require("./func/const.js"); //定数表
+const timeLib = require("./func/time.js"); //
+const util = require("./func/util.js"); //
+const post = require("./func/post.js"); //
+const emojiLib = require("./func/emoji.js"); //
+let jsonLib = require("./func/jsonlib.js"); //プロフィール読み込み準備
+
 const http = require("http");
 const querystring = require("querystring");
 const discord = require("discord.js");
@@ -40,60 +46,6 @@ http
   })
   .listen(3000);
 
-function isSameTime(time1, time2) {
-  let date1 = new Date(time1);
-  let date2 = new Date(time2);
-
-  if (date1.getFullYear() !== date2.getFullYear()) return false;
-  if (date1.getMonth() !== date2.getMonth()) return false;
-  if (date1.getDate() !== date2.getDate()) return false;
-  if (date1.getHours() !== date2.getHours()) return false;
-  if (date1.getMinutes() !== date2.getMinutes()) return false;
-  return true;
-}
-
-function flagToLang(flag) {
-  let foundFlag = consts.flagAndLang.find(set => set[0] === flag);
-  if (foundFlag !== undefined) return foundFlag[1];
-  else return undefined;
-}
-
-function emojiToRole(list, emoji, guild) {
-  let roleName;
-  roleName = list.find(set => set[0] === emoji.name);
-
-  if (roleName === undefined) {
-    console.log(`couldn't be find in 'list'`);
-    return undefined;
-  }
-  if (guild === undefined) {
-    console.log("err in 'list': arg err: 'guild' is undefined");
-    return undefined;
-  }
-  if (guild.id !== consts.guildId) {
-    console.log("please use this in 'Gathering of Science Students'");
-    return undefined;
-  }
-
-  let theRole = guild.roles.cache.find(role => role.name === roleName[1]);
-  return theRole;
-}
-
-function sendReply(message, text) {
-  message
-    .reply(text)
-    .then(console.log("リプライ送信: " + text))
-    .catch(console.error);
-}
-
-function sendMsg(channelId, text, option = {}) {
-  client.channels
-    .fetch(channelId)
-    .send(text, option)
-    .then(console.log("メッセージ送信: " + text + JSON.stringify(option)))
-    .catch(console.error);
-}
-
 let timeCheck = async () => {
   if (ready === false) return 0;
 
@@ -110,7 +62,6 @@ let timeCheck = async () => {
       jnow.getMinutes() === 0 &&
       jnow.getSeconds() === 0
     ) {
-      console.log("A");
       client.guilds.cache
         .find(guild => guild.id === consts.guildId)
         .channels.cache.find(ch => ch.id === consts.loungeChId)
@@ -124,14 +75,13 @@ let timeCheck = async () => {
       jnow.getMinutes() === 0 &&
       jnow.getSeconds() === 0
     ) {
-      let profile = await JSON.parse(fs.readFileSync("." + consts.ProPath, "utf8"));
+      let profile = await jsonLib.read("." + consts.ProPath);
       profile.members.forEach(mem => {
-        mem.MP[0] = mem.MP[1];
+        mem.MP[0] = Number(mem.MP[1]);
         mem.MP[1] = 0;
       });
-      if (fs.existsSync("." + consts.ProPath)) {
-        fs.writeFileSync("." + consts.ProPath, JSON.stringify(profile));
-      } else throw "dir(ProPath) err in monthlyCheck";
+
+      await jsonLib.write("." + consts.ProPath, profile);
     }
   } catch (err) {
     console.log(err);
@@ -149,22 +99,23 @@ let mentionCheck = async () => {
 
     if (jnow.getSeconds() !== 0) return 0;
 
-    let mentionsDat = await JSON.parse(
-      fs.readFileSync("." + consts.scheduleTimePath, "utf8")
-    );
+    let mentionsDat = await jsonLib.read("." + consts.scheduleTimePath);
 
     if (mentionsDat.mentions.length === 0) return 0;
 
     for (let i = 0; i < consts.reminderTime; ++i)
       jnow.setMinutes(jnow.getMinutes() + 1);
-    console.log(jnow);
 
-    if (mentionsDat.mentions.some(mention => isSameTime(mention.time, jnow))) {
+    if (
+      mentionsDat.mentions.some(mention =>
+        timeLib.isSameTime(mention.time, jnow)
+      )
+    ) {
       let nowMentions = await mentionsDat.mentions.filter(mention =>
-        isSameTime(mention.time, jnow)
+        timeLib.isSameTime(mention.time, jnow)
       );
       let otherMentions = await mentionsDat.mentions.filter(
-        mention => !isSameTime(mention.time, jnow)
+        mention => !timeLib.isSameTime(mention.time, jnow)
       );
 
       await nowMentions.forEach(async men => {
@@ -176,28 +127,23 @@ let mentionCheck = async () => {
       mentionsDat.mentions = await otherMentions.concat(nowMentions);
       console.log(mentionsDat);
 
-      if (fs.existsSync("." + consts.scheduleTimePath)) {
-        fs.writeFileSync("." + consts.scheduleTimePath, JSON.stringify(mentionsDat));
-      } else throw "dir(scheduleTimePath) err in mentionCheck";
+      await jsonLib.write("." + consts.scheduleTimePath, mentionsDat);
 
-      nowMentions.forEach(men => {
-        let scheduleDat = JSON.parse(
-          fs.readFileSync("." + consts.schedulePath, "utf8")
-        );
+      nowMentions.forEach(async men => {
+        let scheduleDat = await jsonLib.read("." + consts.schedulePath);
 
         scheduleDat.schedule[men.id].participants.forEach(mem => {
-          console.log(mem.id);
           client.users.cache
             .find(user => user.id === mem.id)
             .send(
               `${scheduleDat.schedule[men.id].name}の${consts.reminderTime}分前だよ!`
-            );
+            ); //caution
         });
       });
     } else return 0;
   } catch (err) {
     console.log(
-      "a defined error happened while executing the function timeCheck:(" +
+      "a defined error happened while executing the function mentionCheck:(" +
         err +
         ")"
     );
@@ -217,8 +163,48 @@ client.on("ready", message => {
   ready = true;
 });
 
+let commandProcess = message => {
+  if (message.content.startsWith(preStr)) {
+    try {
+      let args = message.content.split(" ");
+      //console.log(args);
+      let prefix = args.shift().substr(preStr.length);
+      let cmdPath = `./cmd/${prefix}.js`;
+      let adCmdPath = `./adcmd/${prefix}.js`;
+
+      //console.log(args);
+
+      if (fs.existsSync(cmdPath)) {
+        if (require(cmdPath).cMain(args, message) === 0) {
+          console.log(`command:${cmdPath} ${args} successfully completed.`);
+        }
+      } else if (fs.existsSync(adCmdPath)) {
+        //command by admin
+        if (message.member.roles.cache.has(consts.adminRoleId)) {
+          //caution
+          //Management
+          if (require(adCmdPath).cMain(args, message) === 0)
+            console.log(`command:${adCmdPath} ${args} successfully completed.`);
+        } else message.channel.send("権限が足りません。");
+      } else {
+        let text = fs.readFileSync("./text/cmdHelp.txt", "utf8");
+
+        post.post(text, message.author);
+        message.reply(cmdPath + "は存在しません。");
+        console.log("couldn't find command file(" + cmdPath + ")");
+      }
+    } catch (err) {
+      console.log(
+        "a defined error happened while executing a command:(" + err + ")"
+      );
+      return -1;
+    }
+  }
+  return 0;
+};
+
 client.on("message", async message => {
-  console.log("start");
+  //console.log("start");
   if (message.author === client.user) {
     if (consts.deleteBanedChList.includes(message.channel.id)) return;
     message.react("🗑️");
@@ -230,8 +216,8 @@ client.on("message", async message => {
   if (message.channel.type === "text") {
     if (message.guild.id === consts.guildId) {
       let pointmember = consts.member; //初期値代入
-      let access = require("./func/file.js"); //プロフィール読み込み準備
-      let profile = access.read("." + consts.ProPath); //プロフィール読み込み
+
+      let profile = await jsonLib.read("." + consts.ProPath); //プロフィール読み込み
       pointmember.id = message.author.id; //idを送信者のidに変更
       let hoge = profile.members.findIndex(
         member => member.id === pointmember.id
@@ -252,81 +238,36 @@ client.on("message", async message => {
         pointmember.profile = profile.members[hoge].profile;
         pointmember.point = profile.members[hoge].point + 1;
         if (profile.members[hoge].MP !== undefined) {
-          pointmember.MP[1] = profile.members[hoge].MP[1] + 1;
-          let memberRole = message.guild.roles.cache.find(
-            r => r.id === consts.memberRoleId
-          );
-          if (memberRole === undefined) return 0;
+          pointmember.MP[1] = Number(profile.members[hoge].MP[1]) + 1;
 
           if (
-            pointmember.MP[0] + pointmember.MP[1] >
+            Number(pointmember.MP[0]) + Number(pointmember.MP[1]) >
             consts.memberRoleThreshold
           ) {
-            message.member.roles.add(memberRole);
+            message.member.roles.add(consts.memberRoleId);
           } else {
             if (
               message.member.roles.cache.some(r => r.id === consts.memberRoleId)
             )
-              message.member.roles.remove(memberRole);
+              message.member.roles.remove(consts.memberRoleId);
           }
         }
         profile.members[hoge] = pointmember; //member.id==pointmember.idとなるようなmemberのprofileにpointmemberを代入
       }
-      if (!message.member.roles.cache.has("805783022749614081")) {
-        if (pointmember.point > 9) {
-          message.member.roles.add("805783022749614081");
-        }
-      }
-      if (fs.existsSync("." + consts.ProPath)) {
-        //ファイルの存在判定
-        fs.writeFileSync("." + consts.ProPath, JSON.stringify(profile)); //profileをpropathに書き込み
-      }
+      await jsonLib.write("." + consts.ProPath, profile);
     }
   }
 
   //コマンド処理
-  if (message.content.startsWith(preStr)) {
-    try {
-      let args = message.content.split(" ");
-      console.log(args);
-      let prefix = args.shift().substr(preStr.length);
-      let cmdPath = `./cmd/${prefix}.js`;
-      let adCmdPath = `./adcmd/${prefix}.js`;
 
-      console.log(args);
-
-      if (fs.existsSync(cmdPath)) {
-        if (require(cmdPath).cMain(args, message) === 0)
-          console.log(`command:${cmdPath} ${args} is successfully completed.`);
-      } else if (fs.existsSync(adCmdPath)) {
-        //command by admin
-        if (message.member.roles.cache.has("755279225702842468")) {
-          //Management
-          if (require(adCmdPath).cMain(args, message) === 0)
-            console.log(
-              `command:${adCmdPath} ${args} is successfully completed.`
-            );
-        } else message.channel.send("権限が足りません。");
-      } else {
-        message.reply(cmdPath + "は存在しません。");
-        console.log("couldn't find command file(" + cmdPath + ")");
-      }
-    } catch (err) {
-      console.log(
-        "a defined error happened while executing a command:(" + err + ")"
-      );
-      return -1;
-    }
-  }
-
-  console.log("end");
+  return commandProcess(message);
 });
 
 client.on("messageReactionAdd", async (reaction, user) => {
   if (user === client.user) return 0;
 
   let member = client.guilds.cache
-    .find(g => g.id === consts.guildId)
+    .find(g => g.id == consts.guildId)
     .members.cache.find(m => m.id === user.id);
 
   //console.log(member);
@@ -348,16 +289,6 @@ client.on("messageReactionAdd", async (reaction, user) => {
 
   const text = encodeURIComponent(reaction.message.content);
 
-  let offender;
-
-  if (reaction.message.channel.type === "text") {
-    if (reaction.message.guild.id === consts.guildId) {
-      offender = reaction.message.guild.roles.cache.find(
-        role => role.name === "Offender"
-      );
-    }
-  }
-
   switch (reaction.emoji.name) {
     case "caution":
       if (reaction.count === consts.maxCautionCount) {
@@ -365,50 +296,49 @@ client.on("messageReactionAdd", async (reaction, user) => {
           `警告:下記のメッセージに要注意リアクションが${consts.maxCautionCount}つ付いています。\n${reaction.message.content}`
         );
         reaction.message.guild.members.cache
-          .filter(
-            member =>
-              member.roles.cache.find(role => role.name === "wasaseki") !==
-              undefined
-          )
-          .each(member =>
-            member.send(
+          .filter(mem => mem.roles.cache.has(consts.adminRoleId))
+          .each(mem =>
+            mem.send(
               `New Offender:<@!${reaction.message.author.id}> , ${reaction.message.content}`
             )
           );
-        if (offender === undefined) break;
-        reaction.message.member.roles.add(offender);
-        if (reaction.message.member.roles.cache.has("755279225702842468")) {
+
+        member.roles.add(consts.offenderRoleId);
+        if (member.roles.cache.has(consts.adminRoleId)) {
           //Management
-          reaction.message.member.roles.remove("755279225702842468"); //Management
+          member.roles.remove(consts.adminRoleId); //Management
         }
 
-        if (reaction.message.member.roles.cache.has("734340291024388096")) {
+        if (member.roles.cache.has(consts.exConvictRoleId)) {
           //Management
-          reaction.message.member.kick();
-          reaction.message.author.send(
+          member.kick();
+          user.send(
             `報告:Ex-Convictが付いていたためあなたはキックされました。\n`
           );
         }
       }
       break;
     case "🗑️":
-      if (reaction.message.author === client.user) {
+      if (
+        reaction.message.author.id === client.user.id &&
+        user.id !== client.user.id
+      ) {
         reaction.message.delete();
       }
       break;
     default:
-      let tgt = flagToLang(reaction.emoji.name);
-      let role = emojiToRole(
+      let tgt = emojiLib.flagToLang(reaction.emoji.name);
+      let role = emojiLib.emojiToRole(
         consts.emojiAndRoles,
         reaction.emoji,
         reaction.message.guild
       );
-      let role2 = emojiToRole(
+      let role2 = emojiLib.emojiToRole(
         consts.emojiAndRoles2,
         reaction.emoji,
         reaction.message.guild
       );
-      let role3 = emojiToRole(
+      let role3 = emojiLib.emojiToRole(
         consts.emojiAndRoles3,
         reaction.emoji,
         reaction.message.guild
@@ -425,12 +355,15 @@ client.on("messageReactionAdd", async (reaction, user) => {
           reaction.message.channel.send(content);
         }
         //rulesのロール取得
-      } else if (role !== undefined) {
-        if (reaction.message.id !== consts.rolingMsgId)
-          console.log("Not Here.");
-        else if (!member.roles.cache.some(r => r.id === role.id))
+      }
+      if (role !== undefined) {
+        if (reaction.message.id !== consts.rolingMsgId) {
+          //console.log("Not Here.");
+        } else if (!member.roles.cache.some(r => r.id === role.id)) {
           member.roles.add(role);
-        else console.log("The member already has the role.");
+        } else {
+          //console.log("The member already has the role.");
+        }
       }
       //rulesの一番興味のある学問ロール取得
       if (role2 !== undefined) {
@@ -444,9 +377,9 @@ client.on("messageReactionAdd", async (reaction, user) => {
 
         console.log(theName);
 
-        if (reaction.message.id !== consts.rolingMsgId2)
-          console.log("Not Here.");
-        else if (
+        if (reaction.message.id !== consts.rolingMsgId2) {
+          //console.log("Not Here.");
+        } else if (
           member.roles.cache.some(
             r => consts.emojiAndRoles2.some(el => el[1] === r.name) //すでにロールがついている場合
           )
@@ -460,17 +393,19 @@ client.on("messageReactionAdd", async (reaction, user) => {
           member.send(
             "先にInterest Roleをお願いします!\nrulesの参照をお願いします。"
           );
-          await reaction.users.remove(user); //二個目のロールのリアクションを削除
+          await reaction.users.remove(user); //ロールのリアクションを削除
         } else {
           await member.roles.add(role2); //一個目のリアクションならロール付与
         }
-      } else console.log("It's non-specific emoji.");
+      }
       if (role3 !== undefined) {
-        if (reaction.message.id !== consts.rolingMsgId3)
-          console.log("Not Here.");
-        else if (!member.roles.cache.some(r => r.id === role3.id))
+        if (reaction.message.id !== consts.rolingMsgId3) {
+          //console.log("Not Here.");
+        } else if (!member.roles.cache.some(r => r.id === role3.id))
           member.roles.add(role3);
-        else console.log("The member already has the role.");
+        else {
+          //console.log("The member already has the role.");
+        }
       }
   }
 });
@@ -499,43 +434,57 @@ client.on("messageReactionRemove", async (reaction, user) => {
 
   switch (reaction.emoji.name) {
     default:
-      let role = emojiToRole(
+      let role = emojiLib.emojiToRole(
         consts.emojiAndRoles,
         reaction.emoji,
         reaction.message.guild
       );
-      let role2 = emojiToRole(
+      let role2 = emojiLib.emojiToRole(
         consts.emojiAndRoles2,
         reaction.emoji,
         reaction.message.guild
       );
-      let role3 = emojiToRole(
+      let role3 = emojiLib.emojiToRole(
         consts.emojiAndRoles3,
         reaction.emoji,
         reaction.message.guild
       );
 
       if (role !== undefined) {
-        if (reaction.message.id !== consts.rolingMsgId)
-          console.log("Not Here.");
-        else if (member.roles.cache.some(r => r.id === role.id))
+        if (reaction.message.id !== consts.rolingMsgId) {
+          //console.log("Not Here.");
+        } else if (member.roles.cache.some(r => r.id === role.id)) {
           member.roles.remove(role);
-        else console.log("The member yet don't has the role.");
-      } else console.log("It's non-specific emoji.");
+        } else {
+          //console.log("The member yet doesn't have the role.");
+        }
+      } else {
+        //console.log("It's non-specific emoji.");
+      }
+
       if (role2 !== undefined) {
-        if (reaction.message.id !== consts.rolingMsgId2)
-          console.log("Not Here.");
-        else if (member.roles.cache.some(r => r.id === role2.id))
+        if (reaction.message.id !== consts.rolingMsgId2) {
+          //console.log("Not Here.");
+        } else if (member.roles.cache.some(r => r.id === role2.id)) {
           member.roles.remove(role2);
-        else console.log("The member yet don't has the role.");
-      } else console.log("It's non-specific emoji.");
+        } else {
+          //console.log("The member yet doesn't have the role.");
+        }
+      } else {
+        //console.log("It's non-specific emoji.");
+      }
+
       if (role3 !== undefined) {
-        if (reaction.message.id !== consts.rolingMsgId3)
-          console.log("Not Here.");
-        else if (member.roles.cache.some(r => r.id === role3.id))
+        if (reaction.message.id !== consts.rolingMsgId3) {
+          //console.log("Not Here.");
+        } else if (member.roles.cache.some(r => r.id === role3.id)) {
           member.roles.remove(role3);
-        else console.log("The member yet don't has the role.");
-      } else console.log("It's non-specific emoji.");
+        } else {
+          //console.log("The member yet don't has the role.");
+        }
+      } else {
+        //console.log("It's non-specific emoji.");
+      }
   }
 });
 
@@ -574,21 +523,32 @@ client.on("guildMemberAdd", member => {
     `ようこそ<@!${member.id}>!\n<#${consts.rulesChId}>をよく読んでね!`
   );
 
-  let text = fs.readFileSync("./post.txt", "utf8");
-  let outs = [];
+  let enRules1 = fs.readFileSync("./text/rules-en1.txt", "utf8");
+  let enRules2 = fs.readFileSync("./text/rules-en2.txt", "utf8");
+  let jaRules = fs.readFileSync("./text/rules-ja.txt", "utf8");
 
-  while (text.length >= 1900) {
-    outs.push(text.slice(0, 1900));
-    text = text.slice(1900, text.length);
-  }
-  outs.push(text);
-
-  for (let i = 0; i < outs.length; ++i) member.send(outs[i]);
+  post.post(enRules1 + enRules2 + jaRules, member);
 });
 
 if (process.env.DISCORD_BOT_TOKEN == undefined) {
   console.log("DISCORD_BOT_TOKENが設定されていません。");
   process.exit(0);
 }
+
+client.on("messageUpdate", async (oldMsg, newMsg) => {
+  let dat = await jsonLib.read("./json/msgList.json");
+  let index = dat.list.findIndex(l => l.parentId === oldMsg.id);
+
+  if (index === -1) return 0;
+
+  dat.list[index].childrenId.forEach(id => {
+    oldMsg.channel.messages.fetch(id).then(msg => msg.delete());
+  });
+  dat.list.splice(index, 1);
+
+  await jsonLib.write("./json/msgList.json", dat);
+
+  return commandProcess(newMsg);
+});
 
 client.login(process.env.DISCORD_BOT_TOKEN);

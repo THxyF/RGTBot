@@ -1,5 +1,10 @@
 ;help
     : ヘルプを表示
+    
+;read
+    : 読み上げ
+;ytb
+    : 音楽BOT機能
 
 ;tex <code>
     : texを表示
@@ -47,11 +52,30 @@
     : <song>の歌詞を表示
     
     
+;nabla start
+    : make a game(some one should use ";nabla join" after using this command)
+;nabla join
+    :join and initialize the game
+;nabla hand
+    : show your hand cards
+;nabla fields
+    : show the cards in the field
+;nabla draw
+    : draw a card
+;nabla use <cardName>
+    : use s card from your hand cards
+;nabla <field(0or1)> <fomulaNumber> <NewFomula(never use " "(space))>
+    : edit the (fomulaNumber)th fomula in (field)th field 
+    
+    
 
 ※;help ;tr ;wiki ;tex ;mtex ;smiles はDM対応
 ※国旗リアクションでの翻訳は英語、日本語、ドイツ語、フランス語、ロシア語、中国語、ギリシャ語対応
 ※メッセージに:caution:が5つ付くとOffenderロールが付与されます
 
+for foreigners:
+  plz react :flag-us:(or other flags) to this message so as to translate this into English(or other languages).
+  
 --------------------------------------------------------------------------------------
 
 [Rythm]

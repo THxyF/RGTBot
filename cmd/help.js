@@ -1,13 +1,11 @@
 const fs = require("fs");
 const fetch = require("node-fetch");
+const post = require("../func/post.js");
+
 exports.cMain = async function cMain(arg, msg) {
   let text = fs.readFileSync("./text/cmdHelp.txt", "utf8");
 
-  while (text.length >= 1800) {
-    msg.channel.send(text.slice(0, 1800));
-    text = text.slice(1800, text.length);
-  }
-  msg.channel.send(text);
+  post.post(text, msg.channel);
   
   return 0;
 };

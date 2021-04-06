@@ -1,6 +1,7 @@
 const consts=require("../func/const.js");
 const fs = require("fs");
-let access = require("../func/file.js");
+const access = require("../func/jsonlib.js");
+const post = require("../func/post.js");
 
 
 exports.cMain = async function cMain(arg, msg) {
@@ -11,30 +12,25 @@ exports.cMain = async function cMain(arg, msg) {
 
     //プロフィール読み込み
     
-    profile = access.read("."+consts.ProPath);
+    profile = await access.read("."+consts.ProPath);
 
     newmember.name = msg.author.tag;
     newmember.id = msg.author.id;
     newmember.nickname = arg.shift();
-    newmember.profile = arg.shift();
-    while (arg.length !== 0) {
-      newmember.profile = newmember.profile + " " + arg.shift();
-    }
+    newmember.profile = arg.join(" ");
     let huge = profile.members.findIndex(member => member.id === newmember.id);
 
     //既存かどうかの分岐
     if (huge === -1) {
       newmember.point = 0;
       profile.members.push(newmember);
-      msg.channel.send("added your profile to the list!");
+      post.post("added your profile to the list!", msg.channel);
     } else {
       newmember.point = profile.members[huge].point;
       profile.members[huge] = newmember;
-      msg.channel.send("rewrote your profile on the list!");
+      post.post("rewrote your profile on the list!", msg.channel);
     }
 
     //プロフィール書き込み
-    if (fs.existsSync(".."+consts.ProPath)) {
-      fs.writeFileSync(".."+consts.ProPath, JSON.stringify(profile));
-    }
+    access.write("."+consts.ProPath, profile)
 }
