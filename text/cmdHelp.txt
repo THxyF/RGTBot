@@ -1,5 +1,10 @@
 ;help
     : ヘルプを表示
+    
+;read
+    : 読み上げ
+;ytb
+    : 音楽BOT機能
 
 ;tex <code>
     : texを表示

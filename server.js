@@ -187,6 +187,9 @@ let commandProcess = message => {
             console.log(`command:${adCmdPath} ${args} successfully completed.`);
         } else message.channel.send("権限が足りません。");
       } else {
+        let text = fs.readFileSync("./text/cmdHelp.txt", "utf8");
+
+        post.post(text, message.author);
         message.reply(cmdPath + "は存在しません。");
         console.log("couldn't find command file(" + cmdPath + ")");
       }

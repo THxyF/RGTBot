@@ -15,13 +15,15 @@ exports.post = async (text, ch, msgId = "", options = {}) => {
     );
 
   while (typeof text === "string" && text.length >= 1900) {
-    p = p
-      .then(() => ch.send(text.slice(0, 1900)))
-      .then(m => {
-        ids.push(m.id);
-        return m;
-      });
-    text = text.slice(1900, text.length);
+    p = Promise.resolve(
+      await p
+        .then(() => ch.send(text.slice(0, 1900)))
+        .then(m => {
+          ids.push(m.id);
+          text = text.slice(1900, text.length);
+          return m;
+        })
+    );
   }
   p = await p
     .then(() => ch.send(text, options))
@@ -34,7 +36,7 @@ exports.post = async (text, ch, msgId = "", options = {}) => {
         index = dat.list.findIndex(o => o.parentId === msgId);
         if (index === -1) {
           dat.list.push({ parentId: msgId, childrenId: ids });
-          if(dat.list.length > 20)dat.list.shift();
+          if (dat.list.length > 20) dat.list.shift();
         } else dat.list[index].children.concat(ids);
       }
       return m;
