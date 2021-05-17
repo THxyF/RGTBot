@@ -298,3 +298,13 @@ exports.mulGenMsg = (newArr, page, selected) => {
 exports.deleteArr = (arr, targets = []) => {
   return arr.filter((e, i) => !targets.includes(i));
 }
+
+exports.shuffleArr = (arr) => {
+  let array = arr;
+  let k;
+  for (let i = array.length; 1 < i; i--) {
+    k = Math.floor(Math.random() * i);
+    [array[k], array[i - 1]] = [array[i - 1], array[k]];
+  }
+  return array;
+}

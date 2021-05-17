@@ -8,68 +8,64 @@ let queue = [];
 let connectingVC;
 let dispatcher;
 let indexes = [0, 0];
+let vc;
 
 let loopFlags = [false, false, false];
 let time = 0;
 
 function loop() {
-  loopFlag[0] = !loopFlag[0];
+  loopFlags[0] = !loopFlags[0];
 }
 function loopList() {
-  loopFlag[1] = !loopFlag[1];
+  loopFlags[1] = !loopFlags[1];
 }
 function loopQueue() {
-  loopFlag[2] = !loopFlag[2];
+  loopFlags[2] = !loopFlags[2];
 }
 
 function nowQueue() {
-  console.log("queue:" + wurl + queue.flat()[0]);
-  if(queue.flat().length < 1)return undefined;
-  if(indexes[0] >= queue.length || indexes[0] <= 0)return undefined;
-  if(Array.isArray(queue[indexes[0]]))return queue[indexes[0]][indexes[1]];
+  //console.log("queue:" + wurl + queue[indexes[0]][indexes[1]]);
+  if (queue.flat().length < 1) return undefined;
+  if (indexes[0] >= queue.length || indexes[0] < 0) return undefined;
+  if (Array.isArray(queue[indexes[0]])) return queue[indexes[0]][indexes[1]];
   else return queue[indexes[0]];
 }
 function shiftQueue() {
   if (queue.flat().length < 1) return undefined;
 
-  if (loopFlags[0])return nowQueue();
-  else if (loopFlags[1]){
-    if(Array.isArray(queue[indexes[0]])){
-      if(indexes[1] === queue[indexes[0]].length - 1){
+  if (loopFlags[0]) return nowQueue();
+  else if (loopFlags[1]) {
+    if (Array.isArray(queue[indexes[0]])) {
+      if (indexes[1] === queue[indexes[0]].length - 1) {
         indexes[1] = 0;
         return nowQueue();
       }
-    }
-    else return nowQueue();
-  }
-  else if (loopFlags[2]){
-    if(indexes[0] === queue.length - 1){
-      if(!Array.isArray(queue[indexes[0]])){
+    } else return nowQueue();
+  } else if (loopFlags[2]) {
+    if (indexes[0] === queue.length - 1) {
+      if (!Array.isArray(queue[indexes[0]])) {
         indexes[0] = 0;
         indexes[1] = 0;
         return nowQueue();
-      }
-      else if(indexes[1] === queue[indexes[0]].length - 1){
+      } else if (indexes[1] === queue[indexes[0]].length - 1) {
         indexes[0] = 0;
         indexes[1] = 0;
         return nowQueue();
       }
     }
   }
-  
-  if (!Array.isArray(queue[indexes[0]])) ++ indexes[0];
+
+  if (!Array.isArray(queue[indexes[0]])) ++indexes[0];
   else {
-    if (indexes[1] < queue[indexes[0]].length - 1) ++ indexes[1];
+    if (indexes[1] < queue[indexes[0]].length - 1) ++indexes[1];
     else if (indexes[1] === queue[indexes[0]].length - 1) {
-      ++ indexes[0];
+      ++indexes[0];
       indexes[1] = 0;
-    }
-    else if (queue[indexes[0]].length === 0){
+    } else if (queue[indexes[0]].length === 0) {
       queue.splice(indexes[0], 1);
       return shiftQueue();
-    }
-    else {
-      ++ indexes[0];
+    } else {
+      ++indexes[0];
       indexes[1] = 0;
     }
   }
@@ -77,24 +73,22 @@ function shiftQueue() {
   return nowQueue();
 }
 function unshiftQueue() {
-  if(indexes[0] < 0)return undefined;
-  if(indexes[0] >= queue.length){
-    -- indexes;
+  if (indexes[0] < 0) return undefined;
+  if (indexes[0] >= queue.length) {
+    --indexes;
     return undefined;
   }
 
-  if (loopFlags[0])return nowQueue();
-  else if (loopFlags[1]){
-    if(Array.isArray(queue[indexes[0]])){
-      if(indexes[1] === 0){
+  if (loopFlags[0]) return nowQueue();
+  else if (loopFlags[1]) {
+    if (Array.isArray(queue[indexes[0]])) {
+      if (indexes[1] === 0) {
         indexes[1] = queue[indexes[0]].length - 1;
         return nowQueue();
       }
-    }
-    else return nowQueue();
-  }
-  else if (loopFlags[2]){
-    if(indexes[0] === 0 && indexes[1] === 0){
+    } else return nowQueue();
+  } else if (loopFlags[2]) {
+    if (indexes[0] === 0 && indexes[1] === 0) {
       indexes[0] = queue.length - 1;
       if (!Array.isArray(queue[indexes[0]])) {
         indexes[1] = queue[indexes[0]].length - 1;
@@ -103,52 +97,64 @@ function unshiftQueue() {
       return nowQueue();
     }
   }
-  
+
   if (queue.length < 1) return undefined;
-  if (Array.isArray(queue[indexes[0]]) && indexes[1] !== 0){
-    -- indexes[1];
-  }
-  else {
-    -- indexes[0];
-    if(indexes[0] === -1)return undefined;
-    if (Array.isArray(queue[indexes[0]]))indexes[1] = queue[indexes[0]].length - 1;
+  if (Array.isArray(queue[indexes[0]]) && indexes[1] !== 0) {
+    --indexes[1];
+  } else {
+    --indexes[0];
+    if (indexes[0] === -1) return undefined;
+    if (Array.isArray(queue[indexes[0]]))
+      indexes[1] = queue[indexes[0]].length - 1;
   }
 
   return nowQueue();
 }
 function showQueue() {
   console.log(queue);
+  console.log(loopFlags);
+  console.log(indexes);
 }
 
 function skip() {
   dispatcher.end();
 }
+function disconnect() {
+  queue = [];
+  dispatcher.end();
+}
 function skipList() {
-  ++ indexes[0];
+  ++indexes[0];
   indexes[1] = 0;
-  
+
   unshiftQueue();
-  
+
   dispatcher.end();
 }
 
 function play(connection) {
   dispatcher = connection.play(
-    ytdl(nowQueue(), { quality: "highestaudio", begin: time })
+    ytdl(wurl + nowQueue(), { quality: "highestaudio", begin: time })
   );
   time = 0;
 
   dispatcher.on("finish", reason => {
-    if (shiftQueue() !== undefined) play(connection);
-    else {
-      voiceChannel.leave();
+    if (shiftQueue() !== undefined && vc.members.some(m => !m.user.bot)) {
+      play(connection);
+    } else {
+      queue = [];
+      connectingVC = undefined;
+      dispatcher = undefined;
+      indexes = [0, 0];
+      vc.leave();
       connection.disconnect();
+      vc = undefined;
     }
   });
 }
 
 async function main(arg, msg) {
-  let vc = msg.guild.channels.cache.find(
+  vc = msg.guild.channels.cache.find(
     ch => ch.id === msg.member.voice.channel.id
   );
   if (arg.length < 1) throw new Error("arg!?");
@@ -184,7 +190,7 @@ async function main(arg, msg) {
 
   if (connectingVC !== vc.id) {
     connectingVC = vc.id;
-    loop = false;
+    loopFlags = [false, false];
     await util.sleep(200);
     console.log("connect!");
     vc.join().then(connection => play(connection));
@@ -198,19 +204,24 @@ function shuffleSaved() {
   queue.unshift(buf);
 }
 function shuffleList() {
-  if (!Array.isArray(queue[indexes[0]]))return undefined;
-  
+  if (!Array.isArray(queue[indexes[0]])) return undefined;
+
   let buf = queue[indexes[0]].slice(0, indexes[1] + 1);
 
-  queue[indexes[0]] = util.shuffleArr(queue[indexes[0]].slice(indexes[1] + 1, queue[indexes[0]].length));
+  queue[indexes[0]] = util.shuffleArr(
+    queue[indexes[0]].slice(indexes[1] + 1, queue[indexes[0]].length)
+  );
   queue.unshift(buf);
 }
 function shuffle() {
   let a = queue.flat();
   let index = a.findIndex(id => id === nowQueue());
 
-  if(index === -1){console.log("err");return undefined;}
-  
+  if (index === -1) {
+    console.log("err");
+    return undefined;
+  }
+
   let buf = a.slice(0, index + 1);
 
   queue = util.shuffleArr(a.slice(index + 1, a.length));
@@ -250,6 +261,14 @@ exports.cMain = (arg, msg) => {
     case "loop":
       loop();
       break;
+    case "ll":
+    case "loopList":
+      loopList();
+      break;
+    case "lq":
+    case "loopQueue":
+      loopQueue();
+      break;
     case "sh":
     case "shuffle":
       shuffle();
@@ -282,6 +301,11 @@ exports.cMain = (arg, msg) => {
     case "resume":
       resume();
       break;
+    case "d":
+    case "dc":
+    case "disconnect":
+      disconnect();
+      break;
     default:
       msg.channel
         .send(`;ytb [p or play] <_video url/video id/list url/ list id/searching string_>
@@ -311,6 +335,8 @@ exports.cMain = (arg, msg) => {
 ;ytb [pa or pause]
     : 流している音楽を一時停止するよ
 ;ytb [r or resume]
-    : 一時停止した音楽を再生するよ`);
+    : 一時停止した音楽を再生するよ
+;ytb [d or dc or disconnect]
+    : 終わる`);
   }
 };
