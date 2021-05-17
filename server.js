@@ -160,6 +160,21 @@ client.on("ready", message => {
   console.log("Bot準備完了");
   client.user.setPresence({ name: "理学徒の集い運営" });
 
+  client.ws.on("INTERACTION_CREATE", async interaction => {
+    const command = interaction.data.name.toLowerCase();
+    const args = interaction.data.options;
+    if (command === "test") {
+      client.api.interactions(interaction.id, interaction.token).callback.post({
+        data: {
+          type: 4,
+          data: {
+            content: `Hello World!`
+          }
+        }
+      });
+    }
+  });
+
   ready = true;
 });
 
