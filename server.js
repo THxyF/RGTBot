@@ -163,6 +163,18 @@ client.on("ready", message => {
   client.ws.on("INTERACTION_CREATE", async interaction => {
     const command = interaction.data.name.toLowerCase();
     const args = interaction.data.options;
+    client.guilds.fetch("695274768974348320").then(guild => {
+      guild.members.fetch().then(mems => {
+        mems.cache
+          .filter(member => {
+            console.log(
+              member.user.username + ":" + member.roles.cache.first().name
+            );
+            return member.roles.cache.first().name === "@everyone";
+          })
+          .each(member => member.roles.add("843896831217893408"));
+      });
+    });
     if (command === "test") {
       client.api.interactions(interaction.id, interaction.token).callback.post({
         data: {
